@@ -79,7 +79,7 @@ aside h2 span{display:flex;gap:8px}
       <button id="hb" aria-label="Open history">History</button>
       <button id="sb" aria-pressed="false" aria-label="Toggle scientific keys">Scientific</button>
       <button id="gb" aria-label="Open settings">Settings</button>
-      <button id="install" hidden aria-label="Install MINI CALC">Install</button>
+      <button id="install" aria-label="Install MINI CALC">Install</button>
     </div>
   </header>
   <main>
@@ -302,13 +302,26 @@ addEventListener('resize',render);
 
 apply();
 
-// Install MINI CALC as an app on Android and desktop
+// Install MINI CALC as a standalone app
 let deferredInstallPrompt;
 const installButton=$('#install');
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
-addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;installButton.hidden=false;});
-installButton.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installButton.hidden=true;});
-addEventListener('appinstalled',()=>{installButton.hidden=true;deferredInstallPrompt=null;});
+addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;installButton.textContent='Install';});
+installButton.addEventListener('click',async()=>{
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt=null;
+    return;
+  }
+  const ua=navigator.userAgent;
+  if(/iPhone|iPad|iPod/.test(ua)){
+    alert('To install MINI CALC: tap Share, then choose “Add to Home Screen”.');
+  }else{
+    alert('To install MINI CALC, open your browser menu (⋮) and choose “Install app” or “Add to Home screen”.');
+  }
+});
+addEventListener('appinstalled',()=>{installButton.textContent='Installed';installButton.disabled=true;deferredInstallPrompt=null;});
 })();
 </script>
 </body>
