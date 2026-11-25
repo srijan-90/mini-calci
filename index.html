@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MINI CALC · MINI LAB</title>
 <meta name="theme-color" content="#000000">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500&display=swap">
 <style>
@@ -77,6 +79,7 @@ aside h2 span{display:flex;gap:8px}
       <button id="hb" aria-label="Open history">History</button>
       <button id="sb" aria-pressed="false" aria-label="Toggle scientific keys">Scientific</button>
       <button id="gb" aria-label="Open settings">Settings</button>
+      <button id="install" hidden aria-label="Install MINI CALC">Install</button>
     </div>
   </header>
   <main>
@@ -298,6 +301,14 @@ addEventListener('paste',e=>{const t=(e.clipboardData&&e.clipboardData.getData('
 addEventListener('resize',render);
 
 apply();
+
+// Install MINI CALC as an app on Android and desktop
+let deferredInstallPrompt;
+const installButton=$('#install');
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;installButton.hidden=false;});
+installButton.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installButton.hidden=true;});
+addEventListener('appinstalled',()=>{installButton.hidden=true;deferredInstallPrompt=null;});
 })();
 </script>
 </body>
