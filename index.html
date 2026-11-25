@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MINI CALC · MINI LAB</title>
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500&display=swap">
+<style>
+:root{--acc:#FF6A00;--ff:'Oswald','Arial Narrow','Roboto Condensed',Impact,sans-serif;--kh:clamp(52px,8.6vh,68px);color-scheme:dark}
+[data-theme=dark]{--bg:#000;--fg:#F4F4F5;--mut:#8B8E95;--pan:#141517;--line:#2B2D31;--key:#1A1A1A;--key2:#2A2A2A}
+[data-theme=light]{--bg:#F1F3F5;--fg:#15171A;--mut:#666B74;--pan:#fff;--line:#D8DCE1;--key:#fff;--key2:#E2E6EB;color-scheme:light}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 var(--ff);overflow:hidden;transition:background .4s,color .4s}
+#app{height:100%;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:500;letter-spacing:.04em;font-size:17px}
+.brand i{width:12px;height:12px;border-radius:50%;background:var(--acc);box-shadow:0 0 14px var(--acc)}
+.brand small{color:var(--mut);font-weight:300}
+.btns{display:flex;gap:8px}
+button,select{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:10px;padding:7px 14px;cursor:pointer;letter-spacing:.03em}
+button:hover{border-color:var(--acc)}
+button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#000;font-weight:500}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{flex:1;display:flex;justify-content:center;padding:0 16px 20px;overflow:auto}
+.calc{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px;margin:auto}
+body.sci .calc{max-width:780px}
+.disp{padding:4px 8px 0;text-align:right;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end}
+#prev{color:var(--mut);font-size:20px;min-height:28px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:rtl}
+#cur{font-weight:300;font-size:72px;line-height:1.1;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+#pre{color:var(--acc);font-size:22px;min-height:32px;overflow:hidden;white-space:nowrap}
+.mem{display:flex;gap:8px;align-items:center}
+.mem button{flex:1;padding:5px;font-size:15px;color:var(--mut);border-radius:10px}
+#mi{width:22px;color:var(--acc);font-weight:500;text-align:center}
+.keys{display:grid;gap:10px}
+body.sci .keys{grid-template-columns:1fr 1fr}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+#sci{display:none}body.sci #sci{display:grid}
+.k{height:var(--kh);border-radius:16px;border:1px solid transparent;background:var(--key);color:var(--fg);font-size:27px;font-weight:500;padding:0;transition:transform .08s,filter .15s}
+[data-theme=light] .k{border-color:var(--line)}
+.k:hover{filter:brightness(1.18);border-color:transparent}
+.k:active{transform:scale(.95)}
+.k.fn{background:var(--key2)}
+.k.op,.k.ac{color:var(--acc);font-size:31px}
+.k.eq{background:var(--acc);color:#000;font-size:32px}
+#sci .k{font-size:20px;background:var(--key2)}
+aside{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);background:var(--pan);border-left:1px solid var(--line);padding:22px;overflow:auto;transform:translateX(100%);transition:transform .3s;z-index:5;visibility:hidden}
+aside.open{transform:none;visibility:visible}
+aside h2{font-size:20px;font-weight:500;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:8px}
+aside h2 span{display:flex;gap:8px}
+.f{margin-bottom:18px}
+.l{display:block;color:var(--mut);font-size:14px;margin-bottom:8px}
+.seg{display:flex;gap:6px}.seg button{flex:1}
+.sw{display:flex;gap:10px}
+.sw button{width:32px;height:32px;padding:0;border-radius:50%;border:2px solid transparent}
+.sw button[aria-pressed=true]{border-color:var(--fg);background-clip:padding-box}
+.tg{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.tg input{appearance:none;width:42px;height:24px;border-radius:12px;background:var(--line);position:relative;cursor:pointer;transition:background .2s}
+.tg input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.tg input:checked{background:var(--acc)}
+.tg input:checked::after{transform:translateX(18px)}
+.hint{color:var(--mut);font-size:13px;margin-top:12px}
+.h{display:flex;flex-direction:column;align-items:flex-end;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:12px 4px}
+.h span{color:var(--mut);font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h b{font-size:26px;font-weight:300}
+@media(max-width:700px){body.sci .keys{grid-template-columns:1fr}body.sci{--kh:46px}header{padding:14px}.brand small{display:none}#cur{font-size:60px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body data-theme="dark">
+<div id="app">
+  <header>
+    <div class="brand"><i></i>MINI CALC <small>MINI LAB</small></div>
+    <div class="btns">
+      <button id="hb" aria-label="Open history">History</button>
+      <button id="sb" aria-pressed="false" aria-label="Toggle scientific keys">Scientific</button>
+      <button id="gb" aria-label="Open settings">Settings</button>
+    </div>
+  </header>
+  <main>
+    <div class="calc">
+      <section class="disp">
+        <div id="prev"></div>
+        <div id="cur" role="status" aria-live="polite">0</div>
+        <div id="pre"></div>
+      </section>
+      <div class="mem"><span id="mi"></span>
+        <button data-m="mc">MC</button><button data-m="mr">MR</button><button data-m="m+">M+</button><button data-m="m-">M−</button>
+        <button id="cp">Copy</button></div>
+      <div class="keys"><div class="pad" id="sci"></div><div class="pad" id="std"></div></div>
+    </div>
+  </main>
+</div>
+
+<aside id="hist" aria-label="History">
+  <h2>History <span><button id="hc">Clear</button><button class="cl">Close</button></span></h2>
+  <div id="hl"></div>
+</aside>
+<aside id="set" aria-label="Settings">
+  <h2>Settings <button class="cl">Close</button></h2>
+  <div class="f"><span class="l">Theme</span><div class="seg" id="ts"></div></div>
+  <div class="f"><span class="l">Accent colour</span><div class="sw" id="sw"></div></div>
+  <label class="tg"><span>Thousands separators</span><input type="checkbox" id="sp"></label>
+  <p class="hint">Keyboard: digits and operators, Enter to calculate, Backspace to delete, Esc to clear, T to switch theme. You can also paste a calculation.</p>
+</aside>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const D={theme:'dark',acc:'#FF6A00',sci:false,deg:true,sep:true,hist:[],mem:0};
+let S={...D};
+try{Object.assign(S,JSON.parse(localStorage.getItem('minicalc')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('minicalc',JSON.stringify(S))}catch(e){}};
+let expr='',prev='',justEval=false;
+
+const N=d=>[d,'n',d],O=(l,v)=>[l,'o',v||l,'op'];
+const STD=[['AC','ac','','ac'],['⌫','bs','','fn'],['%','%','%','fn'],O('÷'),N('7'),N('8'),N('9'),O('×'),N('4'),N('5'),N('6'),O('−'),N('1'),N('2'),N('3'),O('+'),['±','pm','','fn'],N('0'),N('.'),['=','eq','','eq']];
+const SCI=[['sin','f','sin('],['cos','f','cos('],['tan','f','tan('],['π','f','π'],['asin','f','asin('],['acos','f','acos('],['atan','f','atan('],['e','f','e'],['ln','f','ln('],['log','f','log('],['√','f','√('],['10ˣ','f','10^('],['x²','sq'],['xʸ','o','^'],['n!','!','!'],['deg','deg'],['(','('],[')',')'],['1/x','inv'],['abs','f','abs(']];
+function mk(list,host){list.forEach(([t,a,v,c])=>{const b=document.createElement('button');b.className='k '+(c||'');b.textContent=t;b.dataset.a=a;
+  b.setAttribute('aria-label',{'⌫':'Delete','÷':'Divide','×':'Multiply','−':'Subtract','+':'Add','=':'Equals','±':'Plus or minus','AC':'All clear'}[t]||t);
+  b.onclick=()=>{press(a,v);render()};host.appendChild(b)})}
+mk(STD,$('#std'));mk(SCI,$('#sci'));
+
+// ---------- input logic
+const last=()=>expr.slice(-1),isVal=c=>/[\dπe)!%]/.test(c);
+const opens=()=>(expr.match(/\(/g)||[]).length-(expr.match(/\)/g)||[]).length;
+function fresh(){if(justEval){expr='';prev='';justEval=false}}
+function num(c){
+  fresh();
+  const seg=expr.match(/\d*\.?\d*$/)[0];
+  if(c==='.'){if(seg.includes('.'))return;if(!seg){if(isVal(last()))expr+='×';expr+='0.'}else expr+='.';return}
+  if(seg.replace('.','').length>=15)return;
+  if(seg==='0')expr=expr.slice(0,-1)+c;else{if(!seg&&isVal(last()))expr+='×';expr+=c}
+}
+function op(c){
+  justEval=false;const l=last(),ops='+−×÷^';
+  if(!expr){if(c==='−')expr='−';return}
+  if(expr==='−')return;
+  if(l==='('){if(c==='−')expr+=c;return}
+  if(ops.includes(l)){
+    if(c==='−'&&'×÷^'.includes(l))expr+=c;
+    else if(expr.length>1&&ops.includes(expr.slice(-2,-1)))expr=expr.slice(0,-2)+c;
+    else expr=expr.slice(0,-1)+c;return}
+  expr+=c;
+}
+function fn(c){fresh();if(/^\d/.test(c)&&isVal(last()))expr+='×';expr+=c}
+function press(a,v){
+  switch(a){
+    case 'n':num(v);break;
+    case 'o':op(v);break;
+    case 'f':fn(v);break;
+    case '(':fresh();expr+='(';break;
+    case ')':if(opens()>0&&isVal(last()))expr+=')';break;
+    case '%':case '!':if(isVal(last())&&last()!=='%'){justEval=false;expr+=a}break;
+    case 'sq':if(isVal(last())){justEval=false;expr+='^2'}break;
+    case 'inv':if(expr){expr='1÷('+expr+')';justEval=false}break;
+    case 'deg':S.deg=!S.deg;save();break;
+    case 'ac':expr='';prev='';justEval=false;break;
+    case 'bs':if(justEval){prev='';justEval=false}
+      expr=expr.replace(/(asin\(|acos\(|atan\(|sin\(|cos\(|tan\(|ln\(|log\(|abs\(|√\(|.)$/,'');break;
+    case 'pm':
+      if(justEval){expr=expr.startsWith('−')?expr.slice(1):'−'+expr;break}
+      expr=expr.replace(/(^|[+−×÷^(])(−?)(\d+\.?\d*)$/,(m,a,neg,n)=>neg?a+n:a==='−'?'+'+n:a==='+'?'−'+n:a+'−'+n);break;
+    case 'eq':equals();break;
+  }
+}
+function equals(){
+  if(!expr)return;
+  const v=ev(expr);
+  if(!isFinite(v)){const c=$('#cur');c.textContent='Error';$('#pre').textContent='Check the calculation';setTimeout(render,1100);return}
+  const r=fmt(v),b=balance(expr);
+  if(r!==b){S.hist.unshift({e:b,r});S.hist=S.hist.slice(0,50);save()}
+  prev=b+' =';expr=r;justEval=true;
+}
+const balance=e=>e+')'.repeat(Math.max(0,(e.match(/\(/g)||[]).length-(e.match(/\)/g)||[]).length));
+function fmt(v){
+  if(Math.abs(v)<1e-12)v=0;
+  let s=String(parseFloat(v.toPrecision(12)));
+  if(s.includes('e')){const[m,x]=s.split('e');s=m+'×10^'+x.replace('+','')}
+  return s.replace(/-/g,'−');
+}
+
+// ---------- evaluator (no eval)
+function ev(e){
+  try{
+    const t=balance(e).replace(/-/g,'−').match(/\d+\.?\d*|\.\d+|[a-z]+|[π√+−×÷^%!()]/g)||[];
+    let i=0;const peek=()=>t[i],next=()=>t[i++];
+    const rad=x=>S.deg?x*Math.PI/180:x,deg=x=>S.deg?x*180/Math.PI:x;
+    const F={sin:x=>Math.sin(rad(x)),cos:x=>Math.cos(rad(x)),tan:x=>Math.tan(rad(x)),asin:x=>deg(Math.asin(x)),acos:x=>deg(Math.acos(x)),atan:x=>deg(Math.atan(x)),ln:Math.log,log:Math.log10,abs:Math.abs};
+    const fact=n=>{if(n<0||n%1||n>170)return NaN;let r=1;for(let k=2;k<=n;k++)r*=k;return r};
+    const starts=p=>p&&(/^[\d.a-zπ]/.test(p)||p==='('||p==='√');
+    function primary(){
+      const x=next();if(x===undefined)throw 1;
+      if(/^[\d.]/.test(x))return{v:parseFloat(x)};
+      if(x==='π')return{v:Math.PI};
+      if(x==='e')return{v:Math.E};
+      if(x==='√')return{v:Math.sqrt(primary().v)};
+      if(x==='('){const a=expr();if(peek()===')')next();return{v:a.v}}
+      if(F[x]){if(next()!=='(')throw 1;const a=expr();if(peek()===')')next();return{v:F[x](a.v)}}
+      throw 1;
+    }
+    function postfix(){let a=primary();for(;;){const p=peek();
+      if(p==='%'){next();a={v:a.v/100,pct:true}}else if(p==='!'){next();a={v:fact(a.v)}}else return a}}
+    function power(){const b=postfix();if(peek()==='^'){next();return{v:Math.pow(b.v,unary().v)}}return b}
+    function unary(){const p=peek();if(p==='−'){next();return{v:-unary().v}}if(p==='+'){next();return unary()}return power()}
+    function term(){let a=unary();
+      for(;;){const p=peek();
+        if(p==='×'||p==='÷'){next();const r=unary();a={v:p==='×'?a.v*r.v:a.v/r.v}}
+        else if(starts(p)){a={v:a.v*power().v}}
+        else return a}}
+    function expr(){let a=term();
+      while(peek()==='+'||peek()==='−'){const p=next(),r=term(),b=r.pct?a.v*r.v:r.v;a={v:p==='+'?a.v+b:a.v-b}}
+      return a}
+    const out=expr();if(i<t.length)throw 1;return out.v;
+  }catch(err){return NaN}
+}
+
+// ---------- rendering
+const disp=s=>s.replace(/(\d+)(\.\d*)?/g,(m,a,b)=>(S.sep?a.replace(/\B(?=(\d{3})+(?!\d))/g,','):a)+(b||''));
+function render(){
+  $('#prev').textContent=disp(prev);
+  const c=$('#cur');c.textContent=disp(expr)||'0';
+  let s=72;const base=innerWidth<=700?60:72;s=base;c.style.fontSize=s+'px';
+  while(c.scrollWidth>c.clientWidth&&s>24){s-=3;c.style.fontSize=s+'px'}
+  const v=expr&&!justEval?ev(expr):NaN;
+  $('#pre').textContent=isFinite(v)&&fmt(v)!==balance(expr)?'= '+disp(fmt(v)):'';
+  $('#mi').textContent=S.mem?'M':'';
+  const d=document.querySelector('[data-a=deg]');if(d)d.textContent=S.deg?'deg':'rad';
+}
+function apply(){
+  const th=S.theme==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):S.theme;
+  document.body.dataset.theme=th;document.documentElement.style.setProperty('--acc',S.acc);
+  document.querySelector('meta[name=theme-color]').content=th==='dark'?'#000000':'#F1F3F5';
+  document.body.classList.toggle('sci',S.sci);$('#sb').setAttribute('aria-pressed',S.sci);
+  document.querySelectorAll('#ts button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.theme));
+  document.querySelectorAll('#sw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===S.acc));
+  $('#sp').checked=S.sep;render();
+}
+matchMedia('(prefers-color-scheme: dark)').onchange=apply;
+[['dark','Dark'],['light','Light'],['auto','Auto']].forEach(([v,t])=>{const b=document.createElement('button');b.textContent=t;b.dataset.v=v;
+  b.onclick=()=>{S.theme=v;save();apply()};$('#ts').appendChild(b)});
+[['#FF6A00','Orange'],['#FFB000','Amber'],['#FF3B30','Red'],['#00C2A8','Teal'],['#4C8DFF','Blue']].forEach(([c,n])=>{const b=document.createElement('button');
+  b.style.background=c;b.title=n;b.setAttribute('aria-label',n);b.dataset.c=c;b.onclick=()=>{S.acc=c;save();apply()};$('#sw').appendChild(b)});
+$('#sp').onchange=e=>{S.sep=e.target.checked;save();render();rh()};
+$('#sb').onclick=()=>{S.sci=!S.sci;save();apply()};
+
+// memory + copy
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.m,v=expr?ev(expr):0;
+  if(m==='mc')S.mem=0;
+  else if(m==='mr'){if(S.mem){fresh();if(isVal(last()))expr+='×';expr+=fmt(S.mem)}}
+  else if(isFinite(v)){S.mem=parseFloat(((S.mem||0)+(m==='m+'?v:-v)).toPrecision(12))}
+  save();render()});
+$('#cp').onclick=async()=>{
+  const v=ev(expr),t=isFinite(v)?fmt(v).replace(/−/g,'-'):'';
+  try{await navigator.clipboard.writeText(t);$('#cp').textContent='Copied'}catch(e){$('#cp').textContent='Not allowed'}
+  setTimeout(()=>$('#cp').textContent='Copy',1200)};
+
+// panels + history
+const hist=$('#hist'),set=$('#set');
+const closeAll=()=>{hist.classList.remove('open');set.classList.remove('open')};
+$('#hb').onclick=()=>{set.classList.remove('open');rh();hist.classList.toggle('open')};
+$('#gb').onclick=()=>{hist.classList.remove('open');set.classList.toggle('open')};
+document.querySelectorAll('.cl').forEach(b=>b.onclick=closeAll);
+$('#hc').onclick=()=>{S.hist=[];save();rh()};
+function rh(){const l=$('#hl');l.innerHTML=S.hist.length?'':'<p class="hint">Calculations you finish with = appear here.</p>';
+  S.hist.forEach(h=>{const b=document.createElement('button');b.className='h';b.innerHTML='<span></span><b></b>';
+    b.children[0].textContent=disp(h.e)+' =';b.children[1].textContent=disp(h.r);
+    b.onclick=()=>{expr=h.r;prev=h.e+' =';justEval=true;closeAll();render()};l.appendChild(b)})}
+document.querySelector('main').addEventListener('click',closeAll);
+
+// keyboard + paste
+function key(k){
+  if(/^\d$/.test(k))num(k);
+  else if(k==='.'||k===',')num('.');
+  else if(k==='+')op('+');
+  else if(k==='-'||k==='−')op('−');
+  else if(k==='*'||k==='x'||k==='×')op('×');
+  else if(k==='/'||k==='÷')op('÷');
+  else if(k==='^')op('^');
+  else if(k==='('||k===')')press(k);
+  else if(k==='%'||k==='!')press(k);
+  else if(k==='='||k==='Enter')equals();
+  else if(k==='Backspace')press('bs');
+  else return false;
+  return true;
+}
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='Escape'){if(hist.classList.contains('open')||set.classList.contains('open'))closeAll();else press('ac');render();return}
+  if(e.key==='t'||e.key==='T'){S.theme=document.body.dataset.theme==='dark'?'light':'dark';save();apply();return}
+  if(key(e.key)){e.preventDefault();render()}
+});
+addEventListener('paste',e=>{const t=(e.clipboardData&&e.clipboardData.getData('text')||'').trim().slice(0,60);
+  for(const ch of t)if(ch!=='='&&ch!=='\n')key(ch);render()});
+addEventListener('resize',render);
+
+apply();
+})();
+</script>
+</body>
+</html>
