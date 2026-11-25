@@ -79,9 +79,33 @@ aside h2 span{display:flex;gap:8px}
       <button id="hb" aria-label="Open history">History</button>
       <button id="sb" aria-pressed="false" aria-label="Toggle scientific keys">Scientific</button>
       <button id="gb" aria-label="Open settings">Settings</button>
-      <button id="install" aria-label="Install MINI CALC">Install app</button>
+      <button id="install" aria-label="Install MINI CALC" hidden>Install</button>
     </div>
   </header>
+  <script>
+  // Capture the browser's native install event before the calculator initializes.
+  (() => {
+    let deferredInstallPrompt;
+    const installButton = document.getElementById('install');
+    installButton.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      const promptEvent = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      promptEvent.prompt();
+      await promptEvent.userChoice;
+      installButton.hidden = true;
+    });
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installButton.hidden = false;
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      installButton.hidden = true;
+    });
+  })();
+  </script>
   <main>
     <div class="calc">
       <section class="disp">
@@ -302,32 +326,7 @@ addEventListener('resize',render);
 
 apply();
 
-// Install MINI CALC: use Chrome's native one-tap prompt whenever available.
-const installButton=$('#install');
-let installPrompt=null;
-const alreadyInstalled=matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
-if(alreadyInstalled) installButton.hidden=true;
-addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  installPrompt=e;
-  installButton.textContent='Install app';
-});
-installButton.onclick=async()=>{
-  if(installPrompt){
-    const promptEvent=installPrompt;
-    installPrompt=null;
-    await promptEvent.prompt();
-    const choice=await promptEvent.userChoice;
-    if(choice.outcome==='accepted') installButton.hidden=true;
-    else installButton.textContent='Try install again';
-    return;
-  }
-  alert('MINI CALC installs as an app, not as an HTML file. If your phone has not shown the Install app prompt yet, open this page in Google Chrome, refresh it, then tap Install app again. If Chrome still does not offer the prompt, use ⋮ > Install app (or Add to Home screen).');
-};
-addEventListener('appinstalled',()=>{
-  installButton.hidden=true;
-  installPrompt=null;
-});
+// Register the service worker for offline support and PWA installation.
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 })();
